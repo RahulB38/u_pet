@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - ExpenseTracker</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+</head>
+<body>
+    @if (User.Identity?.IsAuthenticated == true)
+    {
+        <nav class="navbar navbar-expand-lg navbar-dark bg-primary shadow-sm">
+            <div class="container">
+                <a class="navbar-brand fw-bold" asp-controller="Dashboard" asp-action="Index">
+                    <i class="bi bi-wallet2 me-2"></i>ExpenseTracker
+                </a>
+
+                <button class="navbar-toggler border-0" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <div class="collapse navbar-collapse" id="navbarNav">
+                    <ul class="navbar-nav mx-auto gap-lg-2">
+                        <li class="nav-item">
+                            <button type="button" class="nav-link nav-btn" data-bs-toggle="modal" data-bs-target="#categoryModal">
+                                <i class="bi bi-tags me-1"></i>Custom Category
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <button type="button" class="nav-link nav-btn" data-bs-toggle="modal" data-bs-target="#reminderModal">
+                                <i class="bi bi-bell me-1"></i>Reminder
+                            </button>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" asp-controller="Dashboard" asp-action="Index" asp-fragment="recent-transactions">
+                                <i class="bi bi-clock-history me-1"></i>Recent Transactions
+                            </a>
+                        </li>
+                    </ul>
+
+                    <div class="d-flex align-items-center gap-3">
+                        <span class="text-white-50 small d-none d-sm-inline">
+                            <i class="bi bi-person-circle me-1"></i>@User.Identity.Name
+                        </span>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="d-inline">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="btn btn-outline-light btn-sm">
+                                <i class="bi bi-box-arrow-right me-1"></i>Logout
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Custom Category Modal -->
+        <div class="modal fade" id="categoryModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-tags me-2 text-primary"></i>Add Custom Category</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form asp-controller="Category" asp-action="Add" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Category Name</label>
+                                <input type="text" name="Name" class="form-control" placeholder="e.g. Pet Care, Education" required maxlength="50" />
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-6">
+                                    <label class="form-label">Icon (emoji)</label>
+                                    <input type="text" name="Icon" class="form-control" value="📌" maxlength="10" />
+                                </div>
+                                <div class="col-6">
+                                    <label class="form-label">Color</label>
+                                    <input type="color" name="Color" class="form-control form-control-color w-100" value="#8b5cf6" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-plus-lg me-1"></i>Add Category
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Add Reminder Modal -->
+        <div class="modal fade" id="reminderModal" tabindex="-1">
+            <div class="modal-dialog modal-dialog-centered">
+                <div class="modal-content border-0 shadow">
+                    <div class="modal-header border-0 pb-0">
+                        <h5 class="modal-title fw-bold"><i class="bi bi-bell me-2 text-primary"></i>Add Reminder</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <form asp-controller="Reminder" asp-action="Add" method="post">
+                        @Html.AntiForgeryToken()
+                        <div class="modal-body">
+                            <div class="mb-3">
+                                <label class="form-label">Title</label>
+                                <input type="text" name="Title" class="form-control" placeholder="e.g. Pay electricity bill" required maxlength="150" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description <span class="text-muted">(optional)</span></label>
+                                <textarea name="Description" class="form-control" rows="2" placeholder="Any extra details" maxlength="500"></textarea>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Reminder Date</label>
+                                <input type="date" name="ReminderDate" class="form-control" value="@DateTime.Today.ToString("yyyy-MM-dd")" required />
+                            </div>
+                        </div>
+                        <div class="modal-footer border-0 pt-0">
+                            <button type="button" class="btn btn-light" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-bell-fill me-1"></i>Save Reminder
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    }
+
+    <main class="@(User.Identity?.IsAuthenticated == true ? "container py-4" : "")">
+        @if (TempData["Success"] != null)
+        {
+            <div class="alert alert-success alert-dismissible fade show" role="alert">
+                <i class="bi bi-check-circle me-2"></i>@TempData["Success"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @if (TempData["Error"] != null)
+        {
+            <div class="alert alert-danger alert-dismissible fade show" role="alert">
+                <i class="bi bi-exclamation-circle me-2"></i>@TempData["Error"]
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        }
+        @RenderBody()
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>
