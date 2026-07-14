@@ -43,29 +43,4 @@ dotnet restore
 dotnet run
 ```
 
-The database is created automatically on first run.
 
-## Demo Login
-
-| Field | Value |
-|-------|-------|
-| Email | `demo@expense.com` |
-| Password | `demo123` |
-
-## Project Structure
-
-```
-ExpenseTracker/
-├── Controllers/       → Account, Dashboard, Expense
-├── Models/            → User, Expense, Category + ViewModels
-├── Data/              → DbContext, DB seeding
-├── Views/             → Razor views (Bootstrap UI)
-├── wwwroot/           → CSS, JavaScript
-└── Helpers/           → Password hashing
-Database/
-└── schema.sql         → SQL Server schema reference
-```
-
-## Resume Line
-
-> Developed a personal expense tracking web application using ASP.NET Core MVC, C#, SQL Server, HTML5, CSS, JavaScript, and Bootstrap. Implemented secure user authentication, categorized expense management, transaction history, and an interactive dashboard with spending analytics and visual reports.
