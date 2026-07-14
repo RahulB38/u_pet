@@ -1,0 +1,293 @@
+@model DashboardViewModel
+@{
+    ViewData["Title"] = "Dashboard";
+    var selectedCat = ViewBag.SelectedCategory as int?;
+}
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h3 class="fw-bold mb-0">Dashboard</h3>
+        <p class="text-muted mb-0">Hello, @Model.UserName.Split(' ')[0]! Here's your spending overview.</p>
+    </div>
+    <span class="badge bg-primary-subtle text-primary fs-6">
+        <i class="bi bi-calendar3 me-1"></i>@DateTime.Today.ToString("MMMM yyyy")
+    </span>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="stat-label mb-1">This Month</p>
+                        <h4 class="stat-value mb-0">₹@Model.MonthTotal.ToString("N0")</h4>
+                    </div>
+                    <div class="stat-icon bg-primary-subtle text-primary">
+                        <i class="bi bi-currency-rupee"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="stat-label mb-1">Transactions</p>
+                        <h4 class="stat-value mb-0">@Model.TransactionCount</h4>
+                    </div>
+                    <div class="stat-icon bg-success-subtle text-success">
+                        <i class="bi bi-receipt"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="stat-label mb-1">Top Category</p>
+                        <h4 class="stat-value mb-0 fs-5">@Model.TopCategory</h4>
+                    </div>
+                    <div class="stat-icon bg-warning-subtle text-warning">
+                        <i class="bi bi-trophy"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-6 col-xl-3">
+        <div class="card stat-card border-0 shadow-sm h-100">
+            <div class="card-body">
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <p class="stat-label mb-1">Avg / Day</p>
+                        <h4 class="stat-value mb-0">₹@Model.AvgDaily.ToString("N0")</h4>
+                    </div>
+                    <div class="stat-icon bg-info-subtle text-info">
+                        <i class="bi bi-graph-up"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Add Expense Form -->
+    <div class="col-lg-5">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-semibold mb-0"><i class="bi bi-plus-circle me-2 text-primary"></i>Add Expense</h5>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <form asp-controller="Expense" asp-action="Add" method="post">
+                    @Html.AntiForgeryToken()
+                    <div class="row g-3">
+                        <div class="col-12">
+                            <label class="form-label">Title</label>
+                            <input asp-for="NewExpense.Title" class="form-control" placeholder="e.g. Lunch, Uber ride" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Amount (₹)</label>
+                            <input asp-for="NewExpense.Amount" type="number" step="0.01" min="0.01" class="form-control" placeholder="0.00" />
+                        </div>
+                        <div class="col-6">
+                            <label class="form-label">Date</label>
+                            <input asp-for="NewExpense.ExpenseDate" type="date" class="form-control" />
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Category</label>
+                            <select asp-for="NewExpense.CategoryId" class="form-select">
+                                @foreach (var cat in Model.Categories)
+                                {
+                                    <option value="@cat.Id">@cat.Icon @cat.Name</option>
+                                }
+                            </select>
+                        </div>
+                        <div class="col-12">
+                            <label class="form-label">Notes <span class="text-muted">(optional)</span></label>
+                            <input asp-for="NewExpense.Notes" class="form-control" placeholder="Any additional details" />
+                        </div>
+                        <div class="col-12">
+                            <button type="submit" class="btn btn-primary w-100">
+                                <i class="bi bi-plus-lg me-1"></i>Add Expense
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Chart -->
+    <div class="col-lg-7">
+        <div class="card border-0 shadow-sm h-100">
+            <div class="card-header bg-white border-0 pt-4 px-4">
+                <h5 class="fw-semibold mb-0"><i class="bi bi-pie-chart me-2 text-primary"></i>Spending by Category</h5>
+            </div>
+            <div class="card-body px-4 pb-4">
+                <div class="chart-container">
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Reminders -->
+<div id="reminders" class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center">
+        <h5 class="fw-semibold mb-0"><i class="bi bi-bell me-2 text-primary"></i>My Reminders</h5>
+        <button type="button" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#reminderModal">
+            <i class="bi bi-plus-lg me-1"></i>Add Reminder
+        </button>
+    </div>
+    <div class="card-body px-4 pb-4">
+        @if (Model.Reminders.Count == 0)
+        {
+            <div class="text-center text-muted py-4">
+                <i class="bi bi-bell-slash fs-2 d-block mb-2"></i>
+                No active reminders. Click <strong>Reminder</strong> in the navbar to add one.
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var rem in Model.Reminders)
+                {
+                    <div class="col-md-6">
+                        <div class="reminder-card @(rem.IsOverdue ? "reminder-overdue" : rem.IsToday ? "reminder-today" : "")">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div>
+                                    <h6 class="fw-semibold mb-1">@rem.Title</h6>
+                                    @if (!string.IsNullOrEmpty(rem.Description))
+                                    {
+                                        <p class="text-muted small mb-2">@rem.Description</p>
+                                    }
+                                    <span class="badge @(rem.IsOverdue ? "bg-danger" : rem.IsToday ? "bg-warning text-dark" : "bg-primary-subtle text-primary")">
+                                        <i class="bi bi-calendar3 me-1"></i>@rem.ReminderDate.ToString("dd MMM yyyy")
+                                        @if (rem.IsToday) { <text>· Today</text> }
+                                        @if (rem.IsOverdue) { <text>· Overdue</text> }
+                                    </span>
+                                </div>
+                                <div class="d-flex gap-1">
+                                    <form asp-controller="Reminder" asp-action="Complete" method="post" class="d-inline">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@rem.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-success" title="Mark as done">
+                                            <i class="bi bi-check-lg"></i>
+                                        </button>
+                                    </form>
+                                    <form asp-controller="Reminder" asp-action="Delete" method="post" class="d-inline"
+                                          onsubmit="return confirm('Delete this reminder?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@rem.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Delete">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</div>
+
+<!-- Trend Chart -->
+<div class="card border-0 shadow-sm mb-4">
+    <div class="card-header bg-white border-0 pt-4 px-4">
+        <h5 class="fw-semibold mb-0"><i class="bi bi-bar-chart me-2 text-primary"></i>Monthly Spending Trend</h5>
+    </div>
+    <div class="card-body px-4 pb-4">
+        <div class="chart-container-wide">
+            <canvas id="trendChart"></canvas>
+        </div>
+    </div>
+</div>
+
+<!-- Transaction History -->
+<div id="recent-transactions" class="card border-0 shadow-sm scroll-target">
+    <div class="card-header bg-white border-0 pt-4 px-4 d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <h5 class="fw-semibold mb-0"><i class="bi bi-clock-history me-2 text-primary"></i>Transaction History</h5>
+        <form method="get" class="d-flex gap-2">
+            <select name="categoryId" class="form-select form-select-sm" style="width:auto" onchange="this.form.submit()">
+                <option value="">All Categories</option>
+                @foreach (var cat in Model.Categories)
+                {
+                    if (selectedCat == cat.Id)
+                    {
+                        <option value="@cat.Id" selected>@cat.Icon @cat.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@cat.Id">@cat.Icon @cat.Name</option>
+                    }
+                }
+            </select>
+        </form>
+    </div>
+    <div class="card-body px-4 pb-4">
+        @if (Model.RecentExpenses.Count == 0)
+        {
+            <div class="text-center text-muted py-5">
+                <i class="bi bi-inbox fs-1 d-block mb-2"></i>
+                No expenses yet. Add your first one above!
+            </div>
+        }
+        else
+        {
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Expense</th>
+                            <th>Category</th>
+                            <th>Date</th>
+                            <th class="text-end">Amount</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var exp in Model.RecentExpenses)
+                        {
+                            <tr>
+                                <td class="fw-semibold">@exp.Title</td>
+                                <td>
+                                    <span class="badge rounded-pill" style="background:@(exp.CategoryColor)20; color:@exp.CategoryColor">
+                                        @exp.CategoryIcon @exp.CategoryName
+                                    </span>
+                                </td>
+                                <td class="text-muted">@exp.ExpenseDate.ToString("dd MMM yyyy")</td>
+                                <td class="text-end fw-bold">₹@exp.Amount.ToString("N2")</td>
+                                <td class="text-end">
+                                    <form asp-controller="Expense" asp-action="Delete" method="post" class="d-inline"
+                                          onsubmit="return confirm('Delete this expense?')">
+                                        @Html.AntiForgeryToken()
+                                        <input type="hidden" name="id" value="@exp.Id" />
+                                        <button type="submit" class="btn btn-sm btn-outline-danger">
+                                            <i class="bi bi-trash"></i>
+                                        </button>
+                                    </form>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+    <script src="~/js/dashboard.js" asp-append-version="true"></script>
+}
