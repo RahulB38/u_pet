@@ -1,0 +1,22 @@
+## Build results
+[Dd]ebug/
+[Rr]elease/
+[Bb]in/
+[Oo]bj/
+
+## Visual Studio
+.vs/
+*.user
+*.suo
+
+## User-specific
+*.rsuser
+launchSettings.json.user
+
+## NuGet
+*.nupkg
+project.lock.json
+
+## OS
+Thumbs.db
+.DS_Store
